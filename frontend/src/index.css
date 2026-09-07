@@ -1,0 +1,143 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* --- Theme variables (Phase 9.2) ---
+   Defaults below are the DARK theme (unchanged from the original design).
+   [data-theme="light"] overrides these with light equivalents. Only
+   structural/chrome colors are tokenized here; self-contained status/alert
+   colors (errors, risk badges, SOS states, etc.) are left as-is. */
+:root {
+  --bg-app: #0f172a;
+  --bg-navbar: linear-gradient(90deg, #0f172a, #1e293b);
+  --bg-sidebar: #111827;
+  --bg-panel: #1e293b;
+  --bg-input: #0f172a;
+  --border-color: #334155;
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --accent-soft: #93c5fd;
+  --accent-soft-hover-bg: #1e3a5f;
+  --overlay-bg: rgba(15, 23, 42, 0.6);
+  --overlay-text: #e2e8f0;
+
+  /* Emergency Mode surfaces */
+  --emg-bg: #1a0e0e;
+  --emg-panel-bg: #241414;
+  --emg-border: #451a1a;
+  --emg-text-primary: #f1f5f9;
+  --emg-text-secondary: #fca5a5;
+  --emg-text-muted: #a88;
+}
+
+[data-theme="light"] {
+  --bg-app: #f4f6f9;
+  --bg-navbar: linear-gradient(90deg, #ffffff, #f1f5f9);
+  --bg-sidebar: #f8fafc;
+  --bg-panel: #ffffff;
+  --bg-input: #f1f5f9;
+  --border-color: #e2e8f0;
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --accent-soft: #2563eb;
+  --accent-soft-hover-bg: #dbeafe;
+  --overlay-bg: rgba(255, 255, 255, 0.75);
+  --overlay-text: #0f172a;
+
+  /* Emergency Mode surfaces (light) */
+  --emg-bg: #fff5f5;
+  --emg-panel-bg: #ffffff;
+  --emg-border: #fecaca;
+  --emg-text-primary: #7f1d1d;
+  --emg-text-secondary: #b91c1c;
+  --emg-text-muted: #78716c;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: var(--bg-app);
+  color: var(--text-primary);
+}
+
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+  z-index: 1;
+  background: var(--bg-app);
+}
+
+/* Dark theme: darken ONLY the base map tiles via CSS filter. The tile pane
+   is a separate Leaflet layer from markers/popups/controls/route overlays,
+   so this never touches those. */
+[data-theme="dark"] .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(0.9) saturate(0.6);
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+
+/* --- Modern map marker badges (Phase 9 redesign) --- */
+.custom-div-icon { background: transparent !important; border: none !important; }
+
+.marker-badge {
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  line-height: 1;
+}
+
+.marker-badge-ring {
+  position: relative;
+}
+
+.marker-badge-ring::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 2px solid #3b82f6;
+  animation: marker-pulse 1.8s ease-out infinite;
+}
+
+@keyframes marker-pulse {
+  0% { transform: scale(0.8); opacity: 0.9; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+
+/* --- Leaflet popups/controls: themed via CSS variables so they follow
+   Dark/Light mode instead of being permanently dark. --- */
+.leaflet-popup-content-wrapper {
+  background: var(--bg-panel);
+  color: var(--text-primary);
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+}
+.leaflet-popup-tip { background: var(--bg-panel); }
+.leaflet-popup-content { font-size: 12.5px; line-height: 1.5; margin: 10px 12px; }
+.leaflet-popup-content b { color: var(--text-primary); }
+
+.leaflet-control-zoom a {
+  background: var(--bg-panel) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+.leaflet-control-zoom a:hover { background: var(--accent-soft-hover-bg) !important; }
+
+.leaflet-control-scale-line {
+  background: var(--overlay-bg) !important;
+  color: var(--overlay-text) !important;
+  border-color: var(--text-muted) !important;
+}
+
+.leaflet-control-attribution {
+  background: var(--overlay-bg) !important;
+  color: var(--text-muted) !important;
+}
+.leaflet-control-attribution a { color: var(--accent-soft) !important; }

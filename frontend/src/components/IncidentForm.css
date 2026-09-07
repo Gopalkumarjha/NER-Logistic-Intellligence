@@ -1,0 +1,80 @@
+.incident-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.incident-modal {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px;
+  width: 380px;
+  max-width: 90vw;
+  max-height: 85vh;
+  overflow-y: auto;
+  color: var(--text-primary);
+}
+
+.incident-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.incident-modal-header h3 { font-size: 16px; }
+
+.close-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.severity-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.sev-btn {
+  flex: 1;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-input);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.sev-btn.sev-low.active { background: #166534; border-color: #166534; color: white; }
+.sev-btn.sev-medium.active { background: #a16207; border-color: #a16207; color: white; }
+.sev-btn.sev-high.active { background: #b91c1c; border-color: #b91c1c; color: white; }
+
+.coord-row {
+  display: flex;
+  gap: 8px;
+}
+
+.submit-btn {
+  margin-top: 14px;
+  width: 100%;
+  padding: 10px;
+  border-radius: 6px;
+  border: none;
+  background: #dc2626;
+  color: white;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+}
+.submit-btn:hover:not(:disabled) { background: #b91c1c; }
+.submit-btn:disabled { background: #475569; cursor: not-allowed; }
