@@ -68,7 +68,7 @@ NER-Logistic-Intelligence/
 
 ## 📸 Screenshots
 
-### 🗺️ Route Planner
+### 🌙 Dark Mode
 
 ![Route Planner](screenshots/Screenshot%20(596).png)
 
@@ -84,6 +84,6 @@ NER-Logistic-Intelligence/
 
 ![Traffic](screenshots/Screenshot%20(599).png)
 
-### 🌙 Dark Mode
+### 📍 Route Planner
 
-![Dark Mode](screenshots/Screenshot%20(600).png)
+![route Planner](screenshots/Screenshot%20(600).png)
