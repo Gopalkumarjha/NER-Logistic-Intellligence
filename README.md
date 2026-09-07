@@ -57,3 +57,20 @@ NER-Logistic-Intelligence/
 │   └── package.json
 │
 └── README.md
+
+## 📸 Screenshots
+
+### 🗺️ Route Planner
+![Route Planner](screenshots/Screenshot%20(596).png)
+
+### 🚨 Emergency Mode
+![Emergency Mode](screenshots/Screenshot%20(597).png)
+
+### 📍 Live Map & Risk Zones
+![Live Map](screenshots/Screenshot%20(598).png)
+
+### 🚦 Traffic & Route Safety
+![Traffic](screenshots/Screenshot%20(599).png)
+
+### 🌙 Dark Mode
+![Dark Mode](screenshots/Screenshot%20(600).png)
