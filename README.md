@@ -1,104 +1,59 @@
-\# NER Logistics Intelligence
+# NER Logistic Intelligence
 
+An AI-powered logistics and route safety platform designed to provide safer route planning, real-time traffic information, incident awareness, and emergency assistance.
 
+## Features
 
-NER Logistics Intelligence is a smart accessibility and logistics platform designed to provide safer route planning and real-time travel information.
+- 🗺️ Interactive route planning
+- 🛣️ Real-time TomTom traffic data
+- ⚠️ Route safety and risk analysis
+- 🌦️ Live weather information
+- 🚨 Emergency SOS alerts
+- 📍 Incident reporting
+- 🤖 ML-based risk prediction
+- 🏥 Nearby hospitals and police locations
+- 📊 Safety-focused dashboard
 
+## Tech Stack
 
+### Frontend
+- React.js
+- Vite
+- CSS
+- React Router
 
-\## Features
+### Backend
+- Node.js
+- Express.js
+- MongoDB
+- Mongoose
 
+### APIs & Services
+- TomTom Traffic API
+- Open-Meteo Weather API
+- OSRM Routing
+- OpenStreetMap / Overpass API
+- Telegram Bot
+- Twilio
 
+### Machine Learning
+- Python
+- Scikit-learn
 
-\- 🗺️ Smart Route Planning
-
-\- 🛡️ Route Safety \& Risk Analysis
-
-\- 🚦 Real-Time Traffic Information
-
-\- 🌦️ Route Weather Information
-
-\- 🚨 Emergency Mode
-
-\- 📍 Incident Reporting
-
-\- 🤖 AI-Based Risk Prediction
-
-\- 📱 Telegram Emergency Alerts
-
-\- 🏥 Nearby Emergency Services
-
-\- 🌐 Interactive Map
-
-
-
-\## Tech Stack
-
-
-
-\### Frontend
-
-\- React.js
-
-\- Vite
-
-\- Leaflet
-
-
-
-\### Backend
-
-\- Node.js
-
-\- Express.js
-
-\- MongoDB
-
-
-
-\### APIs
-
-\- TomTom Traffic API
-
-\- OSRM Routing
-
-\- OpenStreetMap
-
-\- Open-Meteo Weather API
-
-\- Telegram Bot API
-
-
-
-\### Machine Learning
-
-\- Python
-
-\- Scikit-learn
-
-
-
-\## Project Structure
-
-
+## Project Structure
 
 ```text
-
-NER-Logistics-Intelligence/
-
-├── frontend/
-
+NER-Logistic-Intelligence/
 ├── backend/
-
 │   ├── models/
-
 │   ├── routes/
-
 │   ├── services/
-
-│   └── ml\_service/
-
-├── .gitignore
-
+│   ├── ml_service/
+│   └── server.js
+│
+├── frontend/
+│   ├── src/
+│   ├── public/
+│   └── package.json
+│
 └── README.md
-
