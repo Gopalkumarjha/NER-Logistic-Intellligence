@@ -73,13 +73,27 @@ export function incidentRiskContribution(nearbyIncidents) {
   };
 }
 
-// Minimum point reduction required before an alternative is labelled "safer".
-// Prevents recommending an alternative that has equal/higher risk than the current route.
-export const SAFER_ROUTE_THRESHOLD = 10;
+// Even a one-point improvement qualifies; never advertise an equal/higher-risk route as safer.
+export const SAFER_ROUTE_THRESHOLD = 1;
 
-// Two routes are considered "the same" if distances differ by less than 0.5 km
-// (used to avoid recommending an "alternative" that's really the same road)
+// Compare route geometry, not total distance: distinct roads can have nearly equal lengths.
 export function isSameRoute(routeA, routeB) {
   if (!routeA || !routeB) return false;
-  return Math.abs(parseFloat(routeA.distanceKm) - parseFloat(routeB.distanceKm)) < 0.5;
+  const a = routeA.coordinates;
+  const b = routeB.coordinates;
+  if (!Array.isArray(a) || !Array.isArray(b) || !a.length || !b.length) {
+    return Math.abs(parseFloat(routeA.distanceKm) - parseFloat(routeB.distanceKm)) < 0.1;
+  }
+  const samples = Array.from({ length: 11 }, (_, i) => a[Math.round((a.length - 1) * i / 10)]);
+  let closeCount = 0;
+  for (const [lat, lon] of samples) {
+    const nearestKm = Math.min(...b.map(([otherLat, otherLon]) => {
+      const dLat = (otherLat - lat) * Math.PI / 180;
+      const dLon = (otherLon - lon) * Math.PI / 180;
+      const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat * Math.PI / 180) * Math.cos(otherLat * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+      return 6371 * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+    }));
+    if (nearestKm <= 0.15) closeCount++;
+  }
+  return closeCount / samples.length >= 0.85;
 }

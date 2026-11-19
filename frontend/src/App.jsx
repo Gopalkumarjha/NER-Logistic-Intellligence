@@ -129,6 +129,7 @@ export default function App() {
   const modeRef = useRef(mode);
 
   const isRefreshingRef = useRef(false);
+  const refreshPendingRef = useRef(false);
   const isMountedRef = useRef(true);
 
   const findSaferAlternativeRef = useRef(null);
@@ -262,7 +263,8 @@ export default function App() {
           altRisk: null,
           altInfo: null,
           saferFound: false,
-          noAlternativeFound: true
+          noAlternativeFound: true,
+          noAlternativeReason: 'The routing service returned no distinct alternate road for this trip.'
         });
 
         return;
@@ -318,7 +320,8 @@ export default function App() {
 
         saferFound,
 
-        noAlternativeFound: !saferFound
+        noAlternativeFound: !saferFound,
+        noAlternativeReason: saferFound ? null : 'Alternate roads were found, but none had a lower estimated risk than the current route.'
       });
 
     } catch (err) {
@@ -351,7 +354,10 @@ export default function App() {
 
     if (!isMountedRef.current) return;
 
-    if (isRefreshingRef.current) return;
+    if (isRefreshingRef.current) {
+      refreshPendingRef.current = true;
+      return;
+    }
 
     if (loadingRef.current) return;
 
@@ -447,6 +453,10 @@ export default function App() {
       }
 
       isRefreshingRef.current = false;
+      if (refreshPendingRef.current && isMountedRef.current) {
+        refreshPendingRef.current = false;
+        window.setTimeout(() => refreshRouteRisk(), 0);
+      }
     }
   };
 

@@ -239,7 +239,7 @@ export default function Sidebar({
             </>
           ) : (
             <div className="alt-note error">
-              {disruption.altError || '⚠️ No significantly safer alternative found — current route remains recommended.'}
+              {disruption.altError || disruption.noAlternativeReason || '⚠️ No lower-risk alternative found — current route remains recommended.'}
             </div>
           )}
         </div>
