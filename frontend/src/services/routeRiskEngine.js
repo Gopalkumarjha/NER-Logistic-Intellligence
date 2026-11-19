@@ -150,6 +150,7 @@ export async function evaluateRouteRisk(route, incidents = [], options = {}) {
 
     weather: {
       available: weatherAvailable,
+      fetchedAt: weatherAvailable ? new Date().toISOString() : null,
       sampledPoints: routeWeather.sampledCount,
       successCount: routeWeather.successCount,
       worstCase: worstCaseWeather, // real Open-Meteo reading used for scoring, or null
@@ -158,6 +159,8 @@ export async function evaluateRouteRisk(route, incidents = [], options = {}) {
 
     traffic: {
       available: routeTraffic.available,
+      points: routeTraffic.points,
+      fetchedAt: routeTraffic.available ? new Date().toISOString() : null,
       sampledPoints: routeTraffic.sampledCount,
       successCount: routeTraffic.successCount,
       averageCurrentSpeed: routeTraffic.averageCurrentSpeed,

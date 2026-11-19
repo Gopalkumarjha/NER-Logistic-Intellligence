@@ -1,6 +1,6 @@
 const ML_API_URL = import.meta.env.VITE_ML_API_URL || (import.meta.env.DEV ? 'http://localhost:8001/api' : '/api');
 
-// Calls the Random Forest ML service. Returns { risk_score, risk_level, prediction_reason, data_source }.
+// Calls the risk prediction endpoint. The current production implementation is a heuristic prototype, not a trained Random Forest.
 // Throws a friendly error on failure — caller must handle gracefully (never blank screen).
 export async function predictMLRisk(features) {
   let res;

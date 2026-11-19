@@ -127,8 +127,9 @@ export default function Sidebar({
             </ul>
 
             <div className="ml-divider" />
+            <div className="ml-source">Prototype estimate only; not a trained ML model or emergency-grade prediction.</div>
             <div className="ml-header">
-              <span>🌲 AI Prediction (Random Forest)</span>
+              <span>🧪 Prototype risk estimate (rules-based)</span>
             </div>
             {mlLoading && <div className="status-placeholder">🔄 Running ML prediction...</div>}
             {mlError && <div className="error-box">⚠️ {mlError}</div>}
@@ -164,7 +165,7 @@ export default function Sidebar({
                     return '🔴 Traffic: Heavy';
                   })()}
                 </div>
-                <div className="rt-source">Source: TomTom</div>
+                <div className="rt-source">Source: TomTom · Fetched {risk.traffic.fetchedAt ? new Date(risk.traffic.fetchedAt).toLocaleTimeString() : 'time unavailable'} · {risk.traffic.successCount}/{risk.traffic.sampledPoints} samples</div>
               </>
             ) : (
               <div className="rt-unavailable">🚗 Traffic data unavailable</div>
@@ -175,7 +176,7 @@ export default function Sidebar({
             {risk.weather?.available ? (
               <>
                 <div className="rt-label">🌧️ Weather: {risk.weather.worstCase.condition}</div>
-                <div className="rt-source">Source: Open-Meteo</div>
+                <div className="rt-source">Source: Open-Meteo · Observed {risk.weather.worstCase.observedAt || 'time unavailable'}</div>
               </>
             ) : (
               <div className="rt-unavailable">🌧️ Weather data unavailable</div>

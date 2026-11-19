@@ -54,6 +54,7 @@ export async function getWeather(lat, lon) {
 
   const c = data.current;
   return {
+    observedAt: c.time || null,
     temperature: c.temperature_2m,
     precipitation: c.precipitation,
     windSpeed: c.wind_speed_10m,

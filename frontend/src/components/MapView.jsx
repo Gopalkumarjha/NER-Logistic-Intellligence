@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, ZoomControl, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, CircleMarker, ZoomControl, useMap } from 'react-leaflet';
 import L from 'leaflet';
 
 // Modern flat divIcon markers (no external PNG marker images needed => no broken-icon risk)
@@ -51,10 +51,10 @@ function MapStylePicker({ mapStyle, setMapStyle }) {
   return (
     <div className="leaflet-top leaflet-left map-style-control">
       <div className="map-style-picker" role="group" aria-label="Map style">
-        <button type="button" className={mapStyle === 'road' ? 'active' : ''} onClick={() => setMapStyle('road')}>
+        <button type="button" aria-pressed={mapStyle === 'road'} className={mapStyle === 'road' ? 'active' : ''} onClick={() => setMapStyle('road')}>
           <span className="map-style-icon">▱</span> Road
         </button>
-        <button type="button" className={mapStyle === 'satellite' ? 'active' : ''} onClick={() => setMapStyle('satellite')}>
+        <button type="button" aria-pressed={mapStyle === 'satellite'} className={mapStyle === 'satellite' ? 'active' : ''} onClick={() => setMapStyle('satellite')}>
           <span className="map-style-icon">▧</span> Satellite
         </button>
       </div>
@@ -98,13 +98,14 @@ const DEFAULT_CENTER = [25.7, 91.8];
 
 export default function MapView({
   userPosition, routeCoords, fromMarker, toMarker, incidents,
-  isDisrupted, altRouteCoords, facilities, safeRouteCoords
+  isDisrupted, altRouteCoords, facilities, safeRouteCoords, trafficPoints = []
 }) {
   const [mapStyle, setMapStyle] = React.useState('road');
   return (
     <MapContainer center={DEFAULT_CENTER} zoom={8} scrollWheelZoom={true} zoomControl={false}>
       <BaseTileLayer mapStyle={mapStyle} />
       <MapStylePicker mapStyle={mapStyle} setMapStyle={setMapStyle} />
+      {trafficPoints.some((point) => point.traffic) && <div className="traffic-legend" aria-label="Traffic marker legend"><b>TomTom traffic</b><span>🟢 Clear</span><span>🟡 Slower</span><span>🔴 Congested</span></div>}
       <ZoomControl position="topright" />
       <ScaleControl />
 
@@ -145,6 +146,17 @@ export default function MapView({
         </>
       )}
 
+      {trafficPoints.filter((point) => point.traffic).map((point, index) => {
+        const ratio = point.traffic.currentSpeed / Math.max(point.traffic.freeFlowSpeed || 1, 1);
+        const color = ratio >= 0.8 ? '#16a34a' : ratio >= 0.5 ? '#eab308' : '#dc2626';
+        return (
+          <CircleMarker key={`traffic-${index}`} center={[point.lat, point.lon]} radius={8}
+            pathOptions={{ color: '#fff', weight: 2, fillColor: color, fillOpacity: 0.95 }}>
+            <Popup>TomTom traffic sample<br />{Math.round(point.traffic.currentSpeed)} km/h current<br />{Math.round(point.traffic.freeFlowSpeed)} km/h free flow</Popup>
+          </CircleMarker>
+        );
+      })}
+
       {altRouteCoords && altRouteCoords.length > 0 && (
         <Polyline
           positions={altRouteCoords}
@@ -168,7 +180,7 @@ export default function MapView({
             <b>{inc.type}</b> — {inc.severity} severity<br />
             {inc.description && <>{inc.description}<br /></>}
             <span style={{ fontSize: '11px', color: '#666' }}>
-              {new Date(inc.createdAt).toLocaleString()}
+              {inc.verificationStatus === 'verified' ? 'Verified' : 'Unverified community report'} · {inc.createdAt ? new Date(inc.createdAt).toLocaleString() : 'time unavailable'}
             </span>
           </Popup>
         </Marker>

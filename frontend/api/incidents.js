@@ -23,7 +23,7 @@ export default async function handler(req, res) {
     const body = req.body || {};
     const latitude = Number(body.latitude ?? body.lat), longitude = Number(body.longitude ?? body.lon);
     if (!body.type || !Number.isFinite(latitude) || !Number.isFinite(longitude)) return res.status(400).json({ error: 'Incident type and valid coordinates are required.' });
-    const incident = await Incident.create({ ...body, latitude, longitude });
+    const incident = await Incident.create({ ...body, latitude, longitude, verificationStatus: 'unverified', createdAt: new Date() });
     return res.status(201).json({ incident });
   } catch (error) {
     console.error('Incident API failed:', error.message);

@@ -22,6 +22,18 @@ import './App.css';
 
 export default function App() {
   const [mode, setMode] = useState('normal');
+  const [isOnline, setIsOnline] = useState(() => navigator.onLine);
+
+  useEffect(() => {
+    const updateOnline = () => setIsOnline(navigator.onLine);
+    window.addEventListener('online', updateOnline);
+    window.addEventListener('offline', updateOnline);
+    if ('serviceWorker' in navigator && import.meta.env.PROD) navigator.serviceWorker.register('/sw.js').catch(() => {});
+    return () => {
+      window.removeEventListener('online', updateOnline);
+      window.removeEventListener('offline', updateOnline);
+    };
+  }, []);
 
   const [theme, setTheme] = useState(() => {
     try {
@@ -711,6 +723,8 @@ export default function App() {
     <ErrorBoundary>
       <div className="app-shell">
 
+        {!isOnline && <div className="offline-banner" role="status" aria-live="polite">Offline — cached map tiles may appear; routes, incidents and live traffic/weather may be unavailable or stale.</div>}
+
         <Navbar
           mode={mode}
           setMode={setMode}
@@ -810,6 +824,7 @@ export default function App() {
                   toMarker={toMarker}
 
                   incidents={incidents}
+                  trafficPoints={risk?.traffic?.points || []}
 
                   isDisrupted={
                     !!disruption?.isDisrupted

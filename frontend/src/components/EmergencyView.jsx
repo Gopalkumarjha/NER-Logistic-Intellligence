@@ -26,11 +26,11 @@ export default function EmergencyView({ incidents }) {
   const [sosActive, setSosActive] = useState(false);
   const [sosStatus, setSosStatus] = useState('idle'); // idle | sending | success | error
   const [sosMessage, setSosMessage] = useState('');
-  const [smsConfigured, setSmsConfigured] = useState(null); // Telegram configuration status
+  const [telegramStatus, setTelegramStatus] = useState(null);
 
   // Check once (non-blocking, never crashes UI) whether Telegram SOS is configured
   useEffect(() => {
-    getSosStatus().then((s) => setSmsConfigured(s.smsConfigured));
+    getSosStatus().then(setTelegramStatus).catch(() => setTelegramStatus({ telegramConfigured: false, telegramTokenValid: false, telegramRecipientsReachable: false }));
   }, []);
 
   // Get current GPS location as soon as Emergency Mode opens. This is the ONLY
@@ -153,11 +153,16 @@ export default function EmergencyView({ incidents }) {
           {sosStatus === 'sending' ? '📡 Sending SOS...' : '🚨 Send SOS via Telegram'}
         </button>
 
-        {smsConfigured === false && sosStatus === 'idle' && (
-          <div className="sos-hint">
-            Telegram bot not configured on this server — SOS will report an error until configured. Call buttons below always work.
-          </div>
-        )}
+        <div className="sos-hint" role="status" aria-live="polite">
+          {telegramStatus?.telegramConfigured
+            ? 'Telegram bot and configured recipient chat(s) are reachable.'
+            : telegramStatus
+              ? `Telegram not ready — token ${telegramStatus.telegramTokenValid ? 'valid' : 'invalid/unavailable'}, recipient chat(s) ${telegramStatus.telegramRecipientsReachable ? 'reachable' : 'unreachable/unavailable'}.`
+              : 'Checking Telegram bot and recipient status…'}
+          {' '}Pressing SOS sends your precise GPS coordinates and timestamp to the configured Telegram recipient(s). Only press when you want to share them.
+        </div>
+
+        <div className="panel"><small>Nearby facilities are searched when location is locked; results reflect the latest successful search.</small></div>
 
         {sosStatus !== 'idle' && (
           <div className={`sos-note ${sosStatus}`}>
@@ -175,6 +180,7 @@ export default function EmergencyView({ incidents }) {
 
         <div className="panel">
           <h3>🏥 Nearby Hospitals</h3>
+          {facilities?.fetchedAt && <div className="status-placeholder">Search updated {new Date(facilities.fetchedAt).toLocaleTimeString()}</div>}
           {facilitiesLoading && <div className="status-placeholder">🔄 Searching nearby hospitals...</div>}
           {facilitiesError && <div className="error-box">⚠️ {facilitiesError}</div>}
           {facilities && facilities.hospitals.length === 0 && !facilitiesLoading && (
@@ -200,6 +206,7 @@ export default function EmergencyView({ incidents }) {
 
         <div className="panel">
           <h3>🚓 Nearby Police Stations</h3>
+          {facilities?.fetchedAt && <div className="status-placeholder">Search updated {new Date(facilities.fetchedAt).toLocaleTimeString()}</div>}
           {facilitiesLoading && <div className="status-placeholder">🔄 Searching nearby police stations...</div>}
           {facilities && facilities.police.length === 0 && !facilitiesLoading && (
             <div className="status-placeholder">No police stations found within range.</div>
@@ -227,9 +234,9 @@ export default function EmergencyView({ incidents }) {
           {nearbyHazards.length === 0 && (
             <div className="status-placeholder">No reported hazards near your location.</div>
           )}
-          {nearbyHazards.map((inc) => (
+            {nearbyHazards.map((inc) => (
             <div className="hazard-row" key={inc._id}>
-              <span>{inc.type} — {inc.severity}</span>
+                <span>{inc.type} — {inc.severity} · {inc.verificationStatus === 'verified' ? 'Verified' : 'Unverified report'} · {inc.createdAt ? new Date(inc.createdAt).toLocaleString() : 'time unavailable'}</span>
             </div>
           ))}
         </div>

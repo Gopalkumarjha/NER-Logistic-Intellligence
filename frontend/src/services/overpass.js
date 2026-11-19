@@ -8,5 +8,5 @@ export async function fetchNearbyFacilities(lat, lon, radiusMeters = 8000) {
   } catch { throw new Error('Could not reach the facility search service. Check your connection and retry.'); }
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(data.error || `Facility search failed (${response.status}). Please retry.`);
-  return { hospitals: Array.isArray(data.hospitals) ? data.hospitals : [], police: Array.isArray(data.police) ? data.police : [] };
+  return { hospitals: Array.isArray(data.hospitals) ? data.hospitals : [], police: Array.isArray(data.police) ? data.police : [], fetchedAt: new Date().toISOString() };
 }

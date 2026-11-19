@@ -60,14 +60,14 @@ export default function IncidentForm({ onClose, onSubmitted }) {
 
   return (
     <div className="incident-modal-overlay" onClick={onClose}>
-      <div className="incident-modal" onClick={(e) => e.stopPropagation()}>
+      <div className="incident-modal" role="dialog" aria-modal="true" aria-labelledby="incident-form-title" onClick={(e) => e.stopPropagation()}>
         <div className="incident-modal-header">
-          <h3>🚧 Report Incident</h3>
-          <button className="close-btn" onClick={onClose}>✕</button>
+          <h3 id="incident-form-title">🚧 Report Incident</h3>
+          <button className="close-btn" aria-label="Close incident form" onClick={onClose}>✕</button>
         </div>
 
-        <label className="field-label">Incident Type</label>
-        <select className="field-input" value={type} onChange={(e) => setType(e.target.value)}>
+        <label className="field-label" htmlFor="incident-type">Incident Type</label>
+        <select id="incident-type" className="field-input" value={type} onChange={(e) => setType(e.target.value)}>
           {INCIDENT_TYPES.map((t) => (
             <option key={t} value={t}>{t}</option>
           ))}
@@ -87,8 +87,9 @@ export default function IncidentForm({ onClose, onSubmitted }) {
           ))}
         </div>
 
-        <label className="field-label">Description (optional)</label>
+        <label className="field-label" htmlFor="incident-description">Description (optional)</label>
         <textarea
+          id="incident-description"
           className="field-input"
           rows={3}
           placeholder="e.g. Large boulder blocking one lane near NH-6"
@@ -99,12 +100,14 @@ export default function IncidentForm({ onClose, onSubmitted }) {
         <label className="field-label">Location</label>
         <div className="coord-row">
           <input
+            aria-label="Latitude"
             className="field-input"
             placeholder="Latitude"
             value={lat}
             onChange={(e) => setLat(e.target.value)}
           />
           <input
+            aria-label="Longitude"
             className="field-input"
             placeholder="Longitude"
             value={lon}
