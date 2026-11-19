@@ -26,9 +26,9 @@ export default function EmergencyView({ incidents }) {
   const [sosActive, setSosActive] = useState(false);
   const [sosStatus, setSosStatus] = useState('idle'); // idle | sending | success | error
   const [sosMessage, setSosMessage] = useState('');
-  const [smsConfigured, setSmsConfigured] = useState(null); // null = unknown yet
+  const [smsConfigured, setSmsConfigured] = useState(null); // Telegram configuration status
 
-  // Check once (non-blocking, never crashes UI) whether the backend can send real SOS SMS
+  // Check once (non-blocking, never crashes UI) whether Telegram SOS is configured
   useEffect(() => {
     getSosStatus().then((s) => setSmsConfigured(s.smsConfigured));
   }, []);
@@ -94,10 +94,10 @@ export default function EmergencyView({ incidents }) {
         ...(locAccuracy != null ? { accuracy: locAccuracy } : {}),
       });
       setSosStatus('success');
-      setSosMessage('✅ SOS SMS sent successfully');
+      setSosMessage('✅ SOS Telegram message sent successfully');
     } catch (err) {
       setSosStatus('error');
-      setSosMessage(`⚠️ SOS SMS could not be sent — ${err.message}`);
+      setSosMessage(`⚠️ SOS Telegram message could not be sent — ${err.message}`);
     }
   };
 
@@ -150,18 +150,18 @@ export default function EmergencyView({ incidents }) {
           onClick={handleSendSos}
           disabled={sosStatus === 'sending' || !userPos}
         >
-          {sosStatus === 'sending' ? '📡 Sending SOS...' : '🚨 Send SOS SMS'}
+          {sosStatus === 'sending' ? '📡 Sending SOS...' : '🚨 Send SOS via Telegram'}
         </button>
 
         {smsConfigured === false && sosStatus === 'idle' && (
           <div className="sos-hint">
-            SMS provider not configured on this server — SOS will report an error until configured. Call buttons below always work.
+            Telegram bot not configured on this server — SOS will report an error until configured. Call buttons below always work.
           </div>
         )}
 
         {sosStatus !== 'idle' && (
           <div className={`sos-note ${sosStatus}`}>
-            {sosStatus === 'sending' && '📡 Sending SOS SMS with your current location...'}
+            {sosStatus === 'sending' && '📡 Sending SOS Telegram message with your current location...'}
             {sosStatus === 'success' && sosMessage}
             {sosStatus === 'error' && sosMessage}
             <div className="sos-disclaimer">

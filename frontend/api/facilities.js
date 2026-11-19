@@ -1,5 +1,5 @@
 
-const ENDPOINTS = ['https://overpass.private.coffee/api/interpreter', 'https://overpass-api.de/api/interpreter'];
+const ENDPOINTS = ['https://overpass-api.de/api/interpreter', 'https://overpass.private.coffee/api/interpreter'];
 
 function distanceKm(lat1, lon1, lat2, lon2) {
   const r = 6371, rad = Math.PI / 180;
@@ -16,10 +16,15 @@ export default async function handler(req, res) {
   }
   const query = `[out:json][timeout:15];(node["amenity"="hospital"](around:${radius},${lat},${lon});way["amenity"="hospital"](around:${radius},${lat},${lon});node["amenity"="police"](around:${radius},${lat},${lon});way["amenity"="police"](around:${radius},${lat},${lon}););out center tags;`;
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 10000);
+  const timer = setTimeout(() => controller.abort(), 9000);
   try {
     const results = await Promise.any(ENDPOINTS.map(async (endpoint) => {
-      const response = await fetch(`${endpoint}?data=${encodeURIComponent(query)}`, { headers: { Accept: 'application/json' }, signal: controller.signal });
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': 'NER-Logistics-Emergency/1.0 (nearby facilities lookup)' },
+        body: new URLSearchParams({ data: query }),
+        signal: controller.signal,
+      });
       if (!response.ok) throw new Error(`Overpass HTTP ${response.status}`);
       const data = await response.json();
       if (!Array.isArray(data.elements)) throw new Error('Invalid Overpass response');

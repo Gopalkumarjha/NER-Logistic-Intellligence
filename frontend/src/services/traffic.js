@@ -8,7 +8,7 @@
 
 import { sampleRoutePoints } from './routeSampling.js';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000/api' : '/api');
 
 // Fetch real traffic data for a single point via the backend. Never throws —
 // resolves to { available: false } on any network/API failure so callers can
