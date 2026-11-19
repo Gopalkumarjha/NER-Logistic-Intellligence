@@ -14,6 +14,31 @@ export default async function handler(req, res) {
   if (!Number.isFinite(lat) || lat < -90 || lat > 90 || !Number.isFinite(lon) || lon < -180 || lon > 180 || !Number.isFinite(radius) || radius < 500 || radius > 15000) {
     return res.status(400).json({ error: 'Valid latitude, longitude, and search radius are required.' });
   }
+  const tomtomKey = process.env.TOMTOM_API_KEY || process.env.TOMTOM_KEY || process.env.TOMTOM_API;
+  if (tomtomKey) {
+    try {
+      const search = async (query) => {
+        const url = new URL(`https://api.tomtom.com/search/2/poiSearch/${encodeURIComponent(query)}.json`);
+        url.searchParams.set('key', tomtomKey); url.searchParams.set('lat', String(lat));
+        url.searchParams.set('lon', String(lon)); url.searchParams.set('radius', String(radius));
+        url.searchParams.set('limit', '20'); url.searchParams.set('countrySet', 'IN'); url.searchParams.set('view', 'IN');
+        const response = await fetch(url, { signal: AbortSignal.timeout(7500) });
+        if (!response.ok) throw new Error(`TomTom Search HTTP ${response.status}`);
+        const data = await response.json();
+        if (!Array.isArray(data.results)) throw new Error('Invalid TomTom Search response');
+        return data.results.map((item) => ({
+          id: item.id, name: item.poi?.name || 'Unnamed facility', phone: item.poi?.phone || null,
+          lat: item.position?.lat, lon: item.position?.lon,
+          distanceKm: Math.round((Number(item.dist) || 0) / 100) / 10,
+        })).filter((item) => Number.isFinite(item.lat) && Number.isFinite(item.lon)).sort((a, b) => a.distanceKm - b.distanceKm).slice(0, 5);
+      };
+      const [hospitals, police] = await Promise.all([search('hospital'), search('police station')]);
+      return res.status(200).json({ hospitals, police });
+    } catch (error) {
+      console.warn('TomTom facilities lookup failed:', error.message);
+      return res.status(502).json({ error: 'TomTom could not retrieve nearby facilities. Check that the key has Search API access.' });
+    }
+  }
   const query = `[out:json][timeout:15];(node["amenity"="hospital"](around:${radius},${lat},${lon});way["amenity"="hospital"](around:${radius},${lat},${lon});node["amenity"="police"](around:${radius},${lat},${lon});way["amenity"="police"](around:${radius},${lat},${lon}););out center tags;`;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 9000);
