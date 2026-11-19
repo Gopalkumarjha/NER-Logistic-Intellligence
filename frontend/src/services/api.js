@@ -1,5 +1,9 @@
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
-const OSRM_URL = 'https://router.project-osrm.org/route/v1/driving';
+const OSRM_PROFILES = {
+  car: 'https://router.project-osrm.org/route/v1/driving',
+  bike: 'https://routing.openstreetmap.de/routed-bike/route/v1/driving',
+  foot: 'https://routing.openstreetmap.de/routed-foot/route/v1/driving',
+};
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000/api' : '/api');
 
 // Geocode a place name to [lat, lon] using Nominatim
@@ -29,11 +33,14 @@ export async function geocodeLocation(query) {
 
 // Get driving route(s) between two [lat, lon] points using OSRM.
 // Pass { alternatives: true } to request multiple candidate routes (for Phase 5 safer-route comparison).
-export async function getRoutes(fromCoords, toCoords, { alternatives = false } = {}) {
+export async function getRoutes(fromCoords, toCoords, { alternatives = false, travelMode = 'car' } = {}) {
+  if (travelMode === 'train') return getTrainRoutes(fromCoords, toCoords);
+  const mode = ['car', 'bike', 'foot'].includes(travelMode) ? travelMode : 'car';
   if (!import.meta.env.DEV) {
     const params = new URLSearchParams({
       fromLat: String(fromCoords[0]), fromLon: String(fromCoords[1]),
       toLat: String(toCoords[0]), toLon: String(toCoords[1]),
+      travelMode: mode,
     });
     try {
       const response = await fetch(`${API_URL}/routes?${params}`);
@@ -44,8 +51,8 @@ export async function getRoutes(fromCoords, toCoords, { alternatives = false } =
 
   // OSRM expects lon,lat order
   const coordsStr = `${fromCoords[1]},${fromCoords[0]};${toCoords[1]},${toCoords[0]}`;
-  const altParam = alternatives ? '&alternatives=true' : '';
-  const url = `${OSRM_URL}/${coordsStr}?overview=full&geometries=geojson${altParam}`;
+  const altParam = alternatives && mode === 'car' ? '&alternatives=true' : '';
+  const url = `${OSRM_PROFILES[mode]}/${coordsStr}?overview=full&geometries=geojson${altParam}`;
 
   let res;
   try {
@@ -65,8 +72,27 @@ export async function getRoutes(fromCoords, toCoords, { alternatives = false } =
     coordinates: route.geometry.coordinates.map(([lon, lat]) => [lat, lon]),
     distanceKm: (route.distance / 1000).toFixed(1),
     durationMin: Math.round(route.duration / 60),
-    source: 'OSRM',
+    source: mode === 'car' ? 'OSRM' : mode === 'bike' ? 'OpenStreetMap cycling' : 'OpenStreetMap walking',
   }));
+}
+
+async function getTrainRoutes(fromCoords, toCoords) {
+  const params = new URLSearchParams({
+    fromLat: String(fromCoords[0]), fromLon: String(fromCoords[1]),
+    toLat: String(toCoords[0]), toLon: String(toCoords[1]),
+  });
+  let response;
+  try {
+    response = await fetch(`${API_URL}/train-route?${params}`);
+  } catch {
+    throw new Error('Train timetable service could not be reached. Please try again later.');
+  }
+  const data = await response.json().catch(() => ({}));
+  if (response.status === 404) throw new Error(data.error || 'No train timetable data is available for these locations.');
+  if (!response.ok || !Array.isArray(data.routes) || !data.routes.length) {
+    throw new Error(data.error || 'No train route was found for these locations and today’s timetable.');
+  }
+  return data.routes;
 }
 
 // Get a single driving route (used by Phase 2/3 flows)

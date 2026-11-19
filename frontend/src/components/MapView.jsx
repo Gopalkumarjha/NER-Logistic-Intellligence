@@ -26,19 +26,22 @@ const incidentIcons = {
 const hospitalIcon = badgeIcon('🏥', '#0ea5e9', 28);
 const policeIcon = badgeIcon('🚓', '#1e293b', 28);
 
-// Production satellite imagery is served through our API proxy so the TomTom
-// key stays on the server. Keep OSM for local Vite development.
+// Road tiles use OSM directly so the map appears without waiting on a serverless
+// tile proxy. Satellite imagery still uses our TomTom proxy to keep the key private.
 function BaseTileLayer({ mapStyle }) {
   return (
     <>
       <TileLayer
-        url={import.meta.env.DEV
+        url={mapStyle === 'road'
           ? 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
-          : mapStyle === 'road' ? '/api/road/{z}/{x}/{y}.png' : '/api/satellite/{z}/{x}/{y}.jpg'}
-        attribution={import.meta.env.DEV
+          : '/api/satellite/{z}/{x}/{y}.jpg'}
+        attribution={mapStyle === 'road'
           ? '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          : mapStyle === 'road' ? '&copy; TomTom' : '&copy; TomTom | Satellite imagery &copy; Maxar'}
+          : '&copy; TomTom | Satellite imagery &copy; Maxar'}
         maxZoom={19}
+        keepBuffer={3}
+        updateWhenIdle
+        updateWhenZooming={false}
       />
       {!import.meta.env.DEV && mapStyle === 'satellite' && (
         <TileLayer url="/api/satellite-overlay/{z}/{x}/{y}.png" maxZoom={19} />

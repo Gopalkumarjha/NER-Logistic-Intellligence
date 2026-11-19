@@ -63,6 +63,7 @@ export default function App() {
 
   const [from, setFrom] = useState('Shillong, Meghalaya');
   const [to, setTo] = useState('Guwahati, Assam');
+  const [travelMode, setTravelMode] = useState('car');
 
   const [userPosition, setUserPosition] = useState(null);
   const [userCoordsForRoute, setUserCoordsForRoute] = useState(null);
@@ -527,27 +528,12 @@ export default function App() {
       // -----------------------------------------------------
 
       let fromResolved;
-
-      if (
-        userCoordsForRoute &&
-        from.startsWith('My Location')
-      ) {
-        fromResolved = {
-          lat: userCoordsForRoute[0],
-          lon: userCoordsForRoute[1],
-          displayName: 'My Current Location'
-        };
+      if (userCoordsForRoute && from.startsWith('My Location')) {
+        fromResolved = { lat: userCoordsForRoute[0], lon: userCoordsForRoute[1], displayName: 'My Current Location' };
       } else {
-        fromResolved =
-          await geocodeLocation(from);
+        fromResolved = await geocodeLocation(from);
       }
-
-      // -----------------------------------------------------
-      // RESOLVE DESTINATION
-      // -----------------------------------------------------
-
-      const toResolved =
-        await geocodeLocation(to);
+      const toResolved = await geocodeLocation(to);
 
       setFromMarker(fromResolved);
       setToMarker(toResolved);
@@ -566,7 +552,7 @@ export default function App() {
           toResolved.lat,
           toResolved.lon
         ],
-        { alternatives: true }
+        { alternatives: travelMode === 'car', travelMode }
       );
       const route = candidates[0];
       const limitedCandidates = candidates.slice(0, 3);
@@ -584,10 +570,27 @@ export default function App() {
         eta:
           formatDuration(
             route.durationMin
-          )
+          ),
+        detail: travelMode === 'train'
+          ? `Rail timetable · ${route.transfers} transfer${route.transfers === 1 ? '' : 's'} · ${route.source}`
+          : ''
       });
 
       setLoading(false);
+
+      if (travelMode === 'train') {
+        routeContextRef.current = null;
+        setRouteOptions([]);
+        setRouteOptionsLoading(false);
+        setWeather(null);
+        setWeatherLoading(false);
+        setWeatherError('');
+        setRisk(null);
+        setMlRisk(null);
+        setMlLoading(false);
+        setMlError('');
+        return;
+      }
 
       // -----------------------------------------------------
       // SAVE ACTIVE ROUTE
@@ -862,6 +865,9 @@ export default function App() {
               onFindRoute={
                 handleFindRoute
               }
+
+              travelMode={travelMode}
+              setTravelMode={setTravelMode}
 
               locStatus={locStatus}
 
