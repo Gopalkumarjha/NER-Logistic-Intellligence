@@ -26,13 +26,17 @@ const incidentIcons = {
 const hospitalIcon = badgeIcon('🏥', '#0ea5e9', 28);
 const policeIcon = badgeIcon('🚓', '#1e293b', 28);
 
-// Base tile layer: public OpenStreetMap raster tiles. No API key or token
-// required.
+// Production satellite imagery is served through our API proxy so the TomTom
+// key stays on the server. Keep OSM for local Vite development.
 function BaseTileLayer() {
   return (
     <TileLayer
-      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      url={import.meta.env.DEV
+        ? 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+        : '/api/satellite/{z}/{x}/{y}.jpg'}
+      attribution={import.meta.env.DEV
+        ? '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        : '&copy; TomTom | Satellite imagery &copy; Maxar'}
       maxZoom={19}
     />
   );
