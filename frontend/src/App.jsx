@@ -13,7 +13,7 @@ import {
   formatDuration
 } from './services/api.js';
 
-import { fetchIncidents, removeIncident } from './services/incidents.js';
+import { fetchIncidents, removeIncident, submitResolutionProof } from './services/incidents.js';
 import { isSameRoute, SAFER_ROUTE_THRESHOLD } from './services/routeRisk.js';
 import { evaluateRouteRisk } from './services/routeRiskEngine.js';
 import { predictMLRisk, buildMLFeatures } from './services/mlRisk.js';
@@ -742,6 +742,36 @@ export default function App() {
     }
   };
 
+  const handleResolveIncident = async (incident) => {
+    const proof = window.prompt('Explain why this incident is resolved (at least 20 characters). Your GPS must be within 5 km. A second nearby person must confirm.');
+    if (proof == null) return;
+    if (proof.trim().length < 20 || proof.trim().length > 500) {
+      window.alert('Please enter a proof note between 20 and 500 characters.');
+      return;
+    }
+    if (!navigator.geolocation) {
+      window.alert('This browser cannot verify your location.');
+      return;
+    }
+    try {
+      const position = await new Promise((resolve, reject) => navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 10000 }));
+      const result = await submitResolutionProof(incident._id, {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        proof: proof.trim(),
+      });
+      const updated = incidentsRef.current.map((item) => String(item._id) === String(incident._id) ? { ...item, ...result } : item);
+      incidentsRef.current = updated;
+      setIncidents(updated);
+      window.alert(result.verificationStatus === 'resolved'
+        ? 'Incident marked resolved. It has been removed from the active map and route-risk calculation.'
+        : `Proof saved (${result.resolutionCount}/2). One more nearby person must confirm before it is marked resolved.`);
+      if (routeContextRef.current) window.setTimeout(() => refreshRouteRisk(), 150);
+    } catch (err) {
+      window.alert(err.code ? 'Could not verify location. Allow location access and try again.' : (err.message || 'Could not submit resolution proof.'));
+    }
+  };
+
   return (
     <ErrorBoundary>
       <div className="app-shell">
@@ -849,6 +879,7 @@ export default function App() {
                   incidents={incidents}
                   trafficPoints={risk?.traffic?.points || []}
                   onRemoveIncident={handleRemoveIncident}
+                  onResolveIncident={handleResolveIncident}
 
                   isDisrupted={
                     !!disruption?.isDisrupted

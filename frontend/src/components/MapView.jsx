@@ -122,7 +122,7 @@ function trafficLineSegments(route, points) {
 
 export default function MapView({
   userPosition, routeCoords, fromMarker, toMarker, incidents,
-  isDisrupted, altRouteCoords, facilities, safeRouteCoords, trafficPoints = [], onRemoveIncident
+  isDisrupted, altRouteCoords, facilities, safeRouteCoords, trafficPoints = [], onRemoveIncident, onResolveIncident
 }) {
   const [mapStyle, setMapStyle] = React.useState('road');
   const coloredSegments = trafficLineSegments(routeCoords, trafficPoints);
@@ -186,7 +186,7 @@ export default function MapView({
         />
       )}
 
-      {incidents && incidents.map((inc) => (
+      {incidents && incidents.filter((inc) => inc.verificationStatus !== 'resolved').map((inc) => (
         <Marker
           key={inc._id}
           position={[inc.lat, inc.lon]}
@@ -196,8 +196,10 @@ export default function MapView({
             <b>{inc.type}</b> — {inc.severity} severity<br />
             {inc.description && <>{inc.description}<br /></>}
             <span style={{ fontSize: '11px', color: '#666' }}>
-              {inc.verificationStatus === 'verified' ? 'Verified' : 'Unverified community report'} · {inc.createdAt ? new Date(inc.createdAt).toLocaleString() : 'time unavailable'}
+              {inc.verificationStatus === 'verified' ? 'Verified' : 'Unverified community report'} · {inc.createdAt ? new Date(inc.createdAt).toLocaleString() : 'time unavailable'}<br />
+              Resolution proof: {inc.resolutionCount || 0}/2 nearby confirmations
             </span>
+            {onResolveIncident && <><br /><button type="button" onClick={() => onResolveIncident(inc)}>Suggest resolved (GPS + proof)</button></>}
             {inc.canDelete && onRemoveIncident && <><br /><button type="button" onClick={() => onRemoveIncident(inc)}>Remove my report</button></>}
           </Popup>
         </Marker>

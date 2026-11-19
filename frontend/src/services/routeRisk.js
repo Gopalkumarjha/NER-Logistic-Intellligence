@@ -36,6 +36,7 @@ export function findNearbyIncidents(routeCoords, incidents, radiusKm = PROXIMITY
   const nearby = [];
 
   for (const inc of incidents) {
+    if (inc.verificationStatus === 'resolved') continue;
     if (!ROUTE_AFFECTING_TYPES.includes(inc.type)) continue;
     const isNear = sampled.some(
       ([lat, lon]) => haversineKm(lat, lon, inc.lat, inc.lon) <= radiusKm

@@ -22,6 +22,15 @@ function reporterId() {
   return id;
 }
 
+function verifierId() {
+  let id = localStorage.getItem('nerIncidentVerifierId');
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem('nerIncidentVerifierId', id);
+  }
+  return id;
+}
+
 function ownedIncidentIds() {
   try { return JSON.parse(localStorage.getItem('nerOwnedIncidentIds') || '[]'); } catch { return []; }
 }
@@ -82,4 +91,15 @@ export async function removeIncident(incidentId) {
   if (!res.ok) throw new Error(data.error || 'Could not remove incident report.');
   localStorage.setItem('nerOwnedIncidentIds', JSON.stringify(ownedIncidentIds().filter((id) => String(id) !== String(incidentId))));
   return true;
+}
+
+export async function submitResolutionProof(incidentId, { latitude, longitude, proof }) {
+  const res = await fetch(`${API_URL}/incidents?id=${encodeURIComponent(incidentId)}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ latitude, longitude, proof, verifierId: verifierId() }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'Could not submit resolution proof.');
+  return data.incident;
 }
