@@ -31,10 +31,9 @@ export async function geocodeLocation(query) {
   };
 }
 
-// Get driving route(s) between two [lat, lon] points using OSRM.
+// Get route(s) between two [lat, lon] points.
 // Pass { alternatives: true } to request multiple candidate routes (for Phase 5 safer-route comparison).
 export async function getRoutes(fromCoords, toCoords, { alternatives = false, travelMode = 'car' } = {}) {
-  if (travelMode === 'train') return getTrainRoutes(fromCoords, toCoords);
   const mode = ['car', 'bike', 'foot'].includes(travelMode) ? travelMode : 'car';
   if (!import.meta.env.DEV) {
     const params = new URLSearchParams({
@@ -74,25 +73,6 @@ export async function getRoutes(fromCoords, toCoords, { alternatives = false, tr
     durationMin: Math.round(route.duration / 60),
     source: mode === 'car' ? 'OSRM' : mode === 'bike' ? 'OpenStreetMap cycling' : 'OpenStreetMap walking',
   }));
-}
-
-async function getTrainRoutes(fromCoords, toCoords) {
-  const params = new URLSearchParams({
-    fromLat: String(fromCoords[0]), fromLon: String(fromCoords[1]),
-    toLat: String(toCoords[0]), toLon: String(toCoords[1]),
-  });
-  let response;
-  try {
-    response = await fetch(`${API_URL}/train-route?${params}`);
-  } catch {
-    throw new Error('Train timetable service could not be reached. Please try again later.');
-  }
-  const data = await response.json().catch(() => ({}));
-  if (response.status === 404) throw new Error(data.error || 'No train timetable data is available for these locations.');
-  if (!response.ok || !Array.isArray(data.routes) || !data.routes.length) {
-    throw new Error(data.error || 'No train route was found for these locations and today’s timetable.');
-  }
-  return data.routes;
 }
 
 // Get a single driving route (used by Phase 2/3 flows)

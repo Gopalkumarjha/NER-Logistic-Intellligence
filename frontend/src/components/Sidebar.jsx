@@ -47,15 +47,12 @@ export default function Sidebar({
             ['car', '🚗', 'Car'],
             ['bike', '🚴', 'Bike'],
             ['foot', '🚶', 'Foot'],
-            ['train', '🚆', 'Train'],
           ].map(([value, icon, label]) => (
             <button key={value} type="button" className={`travel-mode-btn ${travelMode === value ? 'active' : ''}`} aria-pressed={travelMode === value} onClick={() => setTravelMode?.(value)}>
               <span aria-hidden="true">{icon}</span> {label}
             </button>
           ))}
         </div>
-        {travelMode === 'train' && <div className="mode-note">Train routes use available rail timetables. Coverage and schedules may vary.</div>}
-
         <label className="field-label">From</label>
         <input
           className="field-input"
@@ -88,8 +85,6 @@ export default function Sidebar({
           <div className="route-info">
             <div className="ri-row"><span>Distance</span><b>{routeInfo.distance}</b></div>
             <div className="ri-row"><span>ETA</span><b>{routeInfo.eta}</b></div>
-            {routeInfo.detail && <div className="route-detail">{routeInfo.detail}</div>}
-            {travelMode === 'train' && <div className="route-detail">Timetable data: <a href="https://transitous.org/sources/" target="_blank" rel="noreferrer">Transitous sources</a></div>}
           </div>
         )}
       </div>
@@ -122,7 +117,6 @@ export default function Sidebar({
      <h3>Weather (Route)</h3>
         {weatherLoading && <div className="status-placeholder">🔄 Fetching weather...</div>}
         {weatherError && <div className="error-box">⚠️ {weatherError}</div>}
-        {travelMode === 'train' && !weatherLoading && !weatherError && <div className="status-placeholder">Weather and road-risk estimates are not available for rail routes yet.</div>}
         {weather && !weatherLoading && (
           <div className="weather-grid">
             <div className="weather-item">

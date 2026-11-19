@@ -67,8 +67,6 @@
 .travel-mode-btn span { display: block; margin-bottom: 3px; font-size: 17px; }
 .travel-mode-btn.active { border-color: #3b82f6; background: rgba(37, 99, 235, .18); color: #60a5fa; }
 .travel-mode-btn:focus-visible { outline: 2px solid #60a5fa; outline-offset: 2px; }
-.mode-note, .route-detail { color: var(--text-muted); font-size: 11px; line-height: 1.45; margin-top: 6px; }
-
 .loc-btn {
   margin-top: 8px;
   width: 100%;

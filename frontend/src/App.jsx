@@ -571,26 +571,9 @@ export default function App() {
           formatDuration(
             route.durationMin
           ),
-        detail: travelMode === 'train'
-          ? `Rail timetable · ${route.transfers} transfer${route.transfers === 1 ? '' : 's'} · ${route.source}`
-          : ''
       });
 
       setLoading(false);
-
-      if (travelMode === 'train') {
-        routeContextRef.current = null;
-        setRouteOptions([]);
-        setRouteOptionsLoading(false);
-        setWeather(null);
-        setWeatherLoading(false);
-        setWeatherError('');
-        setRisk(null);
-        setMlRisk(null);
-        setMlLoading(false);
-        setMlError('');
-        return;
-      }
 
       // -----------------------------------------------------
       // SAVE ACTIVE ROUTE
