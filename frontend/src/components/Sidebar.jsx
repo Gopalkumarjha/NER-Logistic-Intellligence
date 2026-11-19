@@ -22,6 +22,7 @@ export default function Sidebar({
   from, to, setFrom, setTo,
   onUseMyLocation, onFindRoute,
   locStatus, routeInfo, loading, error,
+  routeOptions = [], routeOptionsLoading = false, selectedRouteIndex = 0, onSelectRoute,
   weather, weatherLoading, weatherError, risk,
   disruption, mlRisk, mlLoading, mlError
 }) {
@@ -73,6 +74,30 @@ export default function Sidebar({
           </div>
         )}
       </div>
+
+      {routeOptions.length > 0 && (
+        <div className="panel route-options-panel">
+          <h3>Available Routes</h3>
+          {routeOptionsLoading && <div className="status-placeholder">Checking risk and traffic for alternatives…</div>}
+          {routeOptions.length === 1 && !routeOptionsLoading && <div className="status-placeholder">Only one route was returned by the routing service.</div>}
+          {routeOptions.map((option) => {
+            const baseline = routeOptions[0]?.risk?.score;
+            const scored = routeOptions.filter((candidate) => Number.isFinite(candidate.risk?.score));
+            const lowestScore = scored.length ? Math.min(...scored.map((candidate) => candidate.risk.score)) : null;
+            const isSafer = option.index !== 0 && Number.isFinite(baseline) && option.risk?.score < baseline;
+            const isSafest = !routeOptionsLoading && option.risk && option.risk.score === lowestScore;
+            const ratio = option.risk?.traffic?.congestionRatio;
+            const trafficLabel = !option.risk?.traffic?.available ? 'Traffic unavailable' : ratio >= 0.8 ? 'Traffic moving freely' : ratio >= 0.5 ? 'Slower traffic' : 'Congested traffic';
+            return (
+              <button type="button" key={`${option.route.source}-${option.index}`} className={`route-option-card ${selectedRouteIndex === option.index ? 'selected' : ''}`} onClick={() => onSelectRoute?.(option)} disabled={!option.risk}>
+                <span className="route-option-top"><b>{isSafest ? '🟢 Safest available' : isSafer ? '🟢 Safer option' : option.index === 0 ? 'Route 1 · current' : `Route ${option.index + 1}`}</b><span>{option.risk ? `${option.risk.score}/100` : 'Scoring…'}</span></span>
+                <span className="route-option-details">{option.route.distanceKm} km · {Math.floor(option.route.durationMin / 60) ? `${Math.floor(option.route.durationMin / 60)}h ` : ''}{option.route.durationMin % 60}m · {trafficLabel}</span>
+                <span className="route-option-source">{option.route.source || 'Routing service'}{option.route.trafficDelayMin > 0 ? ` · +${option.route.trafficDelayMin}m traffic delay` : ''}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       <div className="panel">
      <h3>Weather (Route)</h3>

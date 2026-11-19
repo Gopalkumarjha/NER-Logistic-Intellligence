@@ -1,5 +1,6 @@
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
 const OSRM_URL = 'https://router.project-osrm.org/route/v1/driving';
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000/api' : '/api');
 
 // Geocode a place name to [lat, lon] using Nominatim
 export async function geocodeLocation(query) {
@@ -29,6 +30,18 @@ export async function geocodeLocation(query) {
 // Get driving route(s) between two [lat, lon] points using OSRM.
 // Pass { alternatives: true } to request multiple candidate routes (for Phase 5 safer-route comparison).
 export async function getRoutes(fromCoords, toCoords, { alternatives = false } = {}) {
+  if (!import.meta.env.DEV) {
+    const params = new URLSearchParams({
+      fromLat: String(fromCoords[0]), fromLon: String(fromCoords[1]),
+      toLat: String(toCoords[0]), toLon: String(toCoords[1]),
+    });
+    try {
+      const response = await fetch(`${API_URL}/routes?${params}`);
+      const data = await response.json().catch(() => ({}));
+      if (response.ok && Array.isArray(data.routes) && data.routes.length) return data.routes;
+    } catch { /* Fall back to OSRM below when the TomTom proxy is unavailable. */ }
+  }
+
   // OSRM expects lon,lat order
   const coordsStr = `${fromCoords[1]},${fromCoords[0]};${toCoords[1]},${toCoords[0]}`;
   const altParam = alternatives ? '&alternatives=true' : '';
@@ -52,6 +65,7 @@ export async function getRoutes(fromCoords, toCoords, { alternatives = false } =
     coordinates: route.geometry.coordinates.map(([lon, lat]) => [lat, lon]),
     distanceKm: (route.distance / 1000).toFixed(1),
     durationMin: Math.round(route.duration / 60),
+    source: 'OSRM',
   }));
 }
 

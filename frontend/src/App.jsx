@@ -8,7 +8,6 @@ import EmergencyView from './components/EmergencyView.jsx';
 
 import {
   geocodeLocation,
-  getRoute,
   getRoutes,
   formatDuration
 } from './services/api.js';
@@ -76,6 +75,9 @@ export default function App() {
 
   const [routeInfo, setRouteInfo] = useState(null);
   const [routeCoords, setRouteCoords] = useState(null);
+  const [routeOptions, setRouteOptions] = useState([]);
+  const [routeOptionsLoading, setRouteOptionsLoading] = useState(false);
+  const [selectedRouteIndex, setSelectedRouteIndex] = useState(0);
 
   const [fromMarker, setFromMarker] = useState(null);
   const [toMarker, setToMarker] = useState(null);
@@ -496,6 +498,9 @@ export default function App() {
     // Clear previous route information
     setRouteInfo(null);
     setRouteCoords(null);
+    setRouteOptions([]);
+    setRouteOptionsLoading(true);
+    setSelectedRouteIndex(0);
 
     setFromMarker(null);
     setToMarker(null);
@@ -550,7 +555,7 @@ export default function App() {
       // GET ROUTE
       // -----------------------------------------------------
 
-      const route = await getRoute(
+      const candidates = await getRoutes(
         [
           fromResolved.lat,
           fromResolved.lon
@@ -559,8 +564,13 @@ export default function App() {
         [
           toResolved.lat,
           toResolved.lon
-        ]
+        ],
+        { alternatives: true }
       );
+      const route = candidates[0];
+      const limitedCandidates = candidates.slice(0, 3);
+      setRouteOptions(limitedCandidates.map((candidate, index) => ({ route: candidate, risk: null, index })));
+      setRouteOptionsLoading(limitedCandidates.length > 1);
 
       setRouteCoords(
         route.coordinates
@@ -617,6 +627,20 @@ export default function App() {
 
         setRisk(currentRouteRisk);
 
+        const alternatives = await Promise.all(limitedCandidates.slice(1).map(async (candidate, index) => {
+          try {
+            const candidateRisk = await evaluateRouteRisk(candidate, incidentsRef.current, { terrainFactor: 20 });
+            return { route: candidate, risk: candidateRisk, index: index + 1 };
+          } catch {
+            return { route: candidate, risk: null, index: index + 1 };
+          }
+        }));
+        setRouteOptions([
+          { route, risk: currentRouteRisk, index: 0 },
+          ...alternatives,
+        ]);
+        setRouteOptionsLoading(false);
+
         // ---------------------------------------------------
         // IMPORTANT:
         // WEATHER IS NOW FROM THE ENTIRE ROUTE,
@@ -639,6 +663,7 @@ export default function App() {
         }
 
       } catch (riskErr) {
+        setRouteOptionsLoading(false);
         setWeatherError(
           riskErr.message ||
           'Could not evaluate route weather.'
@@ -717,6 +742,7 @@ export default function App() {
       }
 
     } catch (err) {
+      setRouteOptionsLoading(false);
       setError(
         err.message ||
         'Something went wrong while finding the route.'
@@ -725,6 +751,19 @@ export default function App() {
       setLoading(false);
       setWeatherLoading(false);
     }
+  };
+
+  const handleSelectRouteOption = (option) => {
+    if (!option?.risk) return;
+    setSelectedRouteIndex(option.index);
+    setRouteCoords(option.route.coordinates);
+    setRouteInfo({ distance: `${option.route.distanceKm} km`, eta: formatDuration(option.route.durationMin) });
+    setRisk(option.risk);
+    setWeather(option.risk.weather?.worstCase || null);
+    setWeatherError(option.risk.weather?.available ? '' : 'Route weather data unavailable.');
+    const current = routeContextRef.current;
+    if (current) routeContextRef.current = { ...current, route: option.route };
+    setDisruption(null);
   };
 
   // ---------------------------------------------------------
@@ -825,6 +864,10 @@ export default function App() {
               locStatus={locStatus}
 
               routeInfo={routeInfo}
+              routeOptions={routeOptions}
+              routeOptionsLoading={routeOptionsLoading}
+              selectedRouteIndex={selectedRouteIndex}
+              onSelectRoute={handleSelectRouteOption}
 
               loading={loading}
 
