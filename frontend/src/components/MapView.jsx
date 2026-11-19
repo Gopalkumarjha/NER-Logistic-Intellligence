@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, ZoomControl, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import GoogleMapView from './GoogleMapView.jsx';
 
 // Modern flat divIcon markers (no external PNG marker images needed => no broken-icon risk)
 function badgeIcon(emoji, bg, size = 30, ring = false) {
@@ -128,21 +127,9 @@ export default function MapView({
   userPosition, routeCoords, fromMarker, toMarker, incidents,
   isDisrupted, altRouteCoords, facilities, safeRouteCoords, trafficPoints = [], onRemoveIncident, onResolveIncident
 }) {
-  const [useFallback, setUseFallback] = useState(false);
   const [mapStyle, setMapStyle] = React.useState('road');
-  const googleMapsKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-  if (googleMapsKey && !useFallback) {
-    return <GoogleMapView
-      userPosition={userPosition} routeCoords={routeCoords} fromMarker={fromMarker} toMarker={toMarker}
-      incidents={incidents} isDisrupted={isDisrupted} altRouteCoords={altRouteCoords} facilities={facilities}
-      safeRouteCoords={safeRouteCoords} trafficPoints={trafficPoints} onRemoveIncident={onRemoveIncident}
-      onResolveIncident={onResolveIncident} onLoadError={() => setUseFallback(true)}
-    />;
-  }
   const coloredSegments = trafficLineSegments(routeCoords, trafficPoints);
   return (
-    <div className="map-view-container">
-    {googleMapsKey && useFallback && <div className="map-fallback-notice" role="status">Google Maps unavailable; showing the live traffic map. Check Maps JavaScript API, billing, and allowed website domains.</div>}
     <MapContainer center={DEFAULT_CENTER} zoom={8} scrollWheelZoom={true} zoomControl={false}>
       <BaseTileLayer mapStyle={mapStyle} />
       <MapStylePicker mapStyle={mapStyle} setMapStyle={setMapStyle} />
@@ -259,6 +246,5 @@ export default function MapView({
         </>
       )}
     </MapContainer>
-    </div>
   );
 }
