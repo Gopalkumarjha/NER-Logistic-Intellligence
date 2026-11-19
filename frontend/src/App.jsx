@@ -22,6 +22,7 @@ import './App.css';
 export default function App() {
   const [mode, setMode] = useState('normal');
   const [isOnline, setIsOnline] = useState(() => navigator.onLine);
+  const [mobilePlannerOpen, setMobilePlannerOpen] = useState(false);
 
   useEffect(() => {
     const updateOnline = () => setIsOnline(navigator.onLine);
@@ -847,6 +848,7 @@ export default function App() {
           <div className="app-body">
 
             <Sidebar
+              className={`mobile-planner-sheet ${mobilePlannerOpen ? 'open' : 'closed'}`}
               from={from}
               to={to}
 
@@ -867,7 +869,7 @@ export default function App() {
               routeOptions={routeOptions}
               routeOptionsLoading={routeOptionsLoading}
               selectedRouteIndex={selectedRouteIndex}
-              onSelectRoute={handleSelectRouteOption}
+              onSelectRoute={(option) => { handleSelectRouteOption(option); setMobilePlannerOpen(false); }}
 
               loading={loading}
 
@@ -887,6 +889,10 @@ export default function App() {
             />
 
             <div className="map-area">
+
+              <button className={`mobile-planner-toggle ${mobilePlannerOpen ? 'open' : ''}`} aria-expanded={mobilePlannerOpen} onClick={() => setMobilePlannerOpen((open) => !open)}>
+                {mobilePlannerOpen ? '✕ Close planner' : '☰ Route & risk'}
+              </button>
 
               {mapError && (
                 <div className="map-error-overlay">

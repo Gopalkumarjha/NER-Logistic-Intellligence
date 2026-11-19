@@ -19,6 +19,7 @@ function RiskBadge({ level }) {
 }
 
 export default function Sidebar({
+  className = '',
   from, to, setFrom, setTo,
   onUseMyLocation, onFindRoute,
   locStatus, routeInfo, loading, error,
@@ -27,7 +28,7 @@ export default function Sidebar({
   disruption, mlRisk, mlLoading, mlError
 }) {
   return (
-    <div className="sidebar">
+    <div className={`sidebar ${className}`}>
       <div className="sidebar-heading">
         <div className="sidebar-heading-icon">⌖</div>
         <div>

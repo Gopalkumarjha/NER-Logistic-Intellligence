@@ -115,8 +115,11 @@ function trafficLineSegments(route, points) {
     const endIndex = nearestRouteIndex(route, end);
     if (endIndex <= startIndex) return [];
     const ratio = ((start.traffic.currentSpeed / start.traffic.freeFlowSpeed) + (end.traffic.currentSpeed / end.traffic.freeFlowSpeed)) / 2;
+    const status = ratio >= 0.8 ? 'Low traffic · moving freely' : ratio >= 0.5 ? 'Moderate traffic · slower than usual' : 'High traffic · congested';
     const color = ratio >= 0.8 ? '#16a34a' : ratio >= 0.5 ? '#eab308' : '#dc2626';
-    return [{ positions: route.slice(startIndex, endIndex + 1), color, ratio }];
+    return [{ positions: route.slice(startIndex, endIndex + 1), color, ratio, status,
+      currentSpeed: (start.traffic.currentSpeed + end.traffic.currentSpeed) / 2,
+      freeFlowSpeed: (start.traffic.freeFlowSpeed + end.traffic.freeFlowSpeed) / 2 }];
   });
 }
 
@@ -130,7 +133,7 @@ export default function MapView({
     <MapContainer center={DEFAULT_CENTER} zoom={8} scrollWheelZoom={true} zoomControl={false}>
       <BaseTileLayer mapStyle={mapStyle} />
       <MapStylePicker mapStyle={mapStyle} setMapStyle={setMapStyle} />
-      {coloredSegments.length > 0 && <div className="traffic-legend" aria-label="TomTom traffic line legend"><b>TomTom traffic</b><span>🟢 Moving freely</span><span>🟡 Slower</span><span>🔴 Congested</span></div>}
+      {coloredSegments.length > 0 && <div className="traffic-legend" aria-label="TomTom traffic line legend"><b>TomTom live traffic</b><span>🟢 Low · moving freely</span><span>🟡 Moderate · slower</span><span>🔴 High · congested</span><span>⚪ Gray · no sample data</span><small>Click a colored route section for its sampled speed</small></div>}
       <ZoomControl position="topright" />
       <ScaleControl />
 
@@ -160,9 +163,9 @@ export default function MapView({
           <Polyline
             positions={routeCoords}
             pathOptions={{
-              color: coloredSegments.length ? '#475569' : (isDisrupted ? '#ef4444' : '#3b82f6'),
-              weight: coloredSegments.length ? 4 : 6,
-              opacity: 0.9,
+              color: coloredSegments.length ? '#cbd5e1' : (isDisrupted ? '#ef4444' : '#3b82f6'),
+              weight: coloredSegments.length ? 9 : 6,
+              opacity: 0.95,
               lineCap: 'round',
               lineJoin: 'round',
             }}
@@ -171,7 +174,17 @@ export default function MapView({
         </>
       )}
 
-      {coloredSegments.map((segment, index) => <Polyline key={`traffic-line-${index}`} positions={segment.positions} pathOptions={{ color: segment.color, weight: 7, opacity: 0.95, lineCap: 'round', lineJoin: 'round' }} />)}
+      {coloredSegments.map((segment, index) => (
+        <Polyline key={`traffic-line-${index}`} positions={segment.positions} pathOptions={{ color: segment.color, weight: 7, opacity: 0.98, lineCap: 'round', lineJoin: 'round' }}>
+          <Popup>
+            <b>{segment.status}</b><br />
+            Estimated between TomTom sample points<br />
+            Current speed: {Math.round(segment.currentSpeed)} km/h<br />
+            Free-flow speed: {Math.round(segment.freeFlowSpeed)} km/h<br />
+            Speed vs free flow: {Math.round(segment.ratio * 100)}%
+          </Popup>
+        </Polyline>
+      ))}
 
       {altRouteCoords && altRouteCoords.length > 0 && (
         <Polyline
