@@ -12,7 +12,7 @@ export default async function handler(req, res) {
     const url = new URL(`https://api.tomtom.com/routing/1/calculateRoute/${locations}/json`);
     url.searchParams.set('key', key);
     url.searchParams.set('maxAlternatives', '2');
-    url.searchParams.set('routeType', 'fast');
+    url.searchParams.set('routeType', 'fastest');
     url.searchParams.set('traffic', 'true');
     url.searchParams.set('routeRepresentation', 'polyline');
     const response = await fetch(url, { signal: AbortSignal.timeout(12000) });
