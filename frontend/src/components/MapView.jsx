@@ -30,15 +30,20 @@ const policeIcon = badgeIcon('🚓', '#1e293b', 28);
 // key stays on the server. Keep OSM for local Vite development.
 function BaseTileLayer() {
   return (
-    <TileLayer
-      url={import.meta.env.DEV
-        ? 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
-        : '/api/satellite/{z}/{x}/{y}.jpg'}
-      attribution={import.meta.env.DEV
-        ? '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        : '&copy; TomTom | Satellite imagery &copy; Maxar'}
-      maxZoom={19}
-    />
+    <>
+      <TileLayer
+        url={import.meta.env.DEV
+          ? 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+          : '/api/satellite/{z}/{x}/{y}.jpg'}
+        attribution={import.meta.env.DEV
+          ? '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          : '&copy; TomTom | Satellite imagery &copy; Maxar'}
+        maxZoom={19}
+      />
+      {!import.meta.env.DEV && (
+        <TileLayer url="/api/satellite-overlay/{z}/{x}/{y}.png" maxZoom={19} />
+      )}
+    </>
   );
 }
 
