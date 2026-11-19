@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import incidentRoutes from './routes/incidents.js';
 import emergencyRoutes from './routes/emergency.js';
 import trafficRoutes from './routes/traffic.js';
+import facilitiesRoutes from './routes/facilities.js';
 
 dotenv.config();
 
@@ -25,6 +26,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/incidents', incidentRoutes);
 app.use('/api/emergency', emergencyRoutes);
 app.use('/api/traffic', trafficRoutes);
+app.use('/api/facilities', facilitiesRoutes);
 
 // Connect to MongoDB — server keeps running even if this fails,
 // so the API stays up and returns clean 503s instead of the process crashing.
