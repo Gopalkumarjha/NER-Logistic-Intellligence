@@ -28,22 +28,37 @@ const policeIcon = badgeIcon('🚓', '#1e293b', 28);
 
 // Production satellite imagery is served through our API proxy so the TomTom
 // key stays on the server. Keep OSM for local Vite development.
-function BaseTileLayer() {
+function BaseTileLayer({ mapStyle }) {
   return (
     <>
       <TileLayer
         url={import.meta.env.DEV
           ? 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
-          : '/api/satellite/{z}/{x}/{y}.jpg'}
+          : mapStyle === 'road' ? '/api/road/{z}/{x}/{y}.png' : '/api/satellite/{z}/{x}/{y}.jpg'}
         attribution={import.meta.env.DEV
           ? '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          : '&copy; TomTom | Satellite imagery &copy; Maxar'}
+          : mapStyle === 'road' ? '&copy; TomTom' : '&copy; TomTom | Satellite imagery &copy; Maxar'}
         maxZoom={19}
       />
-      {!import.meta.env.DEV && (
+      {!import.meta.env.DEV && mapStyle === 'satellite' && (
         <TileLayer url="/api/satellite-overlay/{z}/{x}/{y}.png" maxZoom={19} />
       )}
     </>
+  );
+}
+
+function MapStylePicker({ mapStyle, setMapStyle }) {
+  return (
+    <div className="leaflet-top leaflet-left map-style-control">
+      <div className="map-style-picker" role="group" aria-label="Map style">
+        <button type="button" className={mapStyle === 'road' ? 'active' : ''} onClick={() => setMapStyle('road')}>
+          <span className="map-style-icon">▱</span> Road
+        </button>
+        <button type="button" className={mapStyle === 'satellite' ? 'active' : ''} onClick={() => setMapStyle('satellite')}>
+          <span className="map-style-icon">▧</span> Satellite
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -85,9 +100,11 @@ export default function MapView({
   userPosition, routeCoords, fromMarker, toMarker, incidents,
   isDisrupted, altRouteCoords, facilities, safeRouteCoords
 }) {
+  const [mapStyle, setMapStyle] = React.useState('road');
   return (
     <MapContainer center={DEFAULT_CENTER} zoom={8} scrollWheelZoom={true} zoomControl={false}>
-      <BaseTileLayer />
+      <BaseTileLayer mapStyle={mapStyle} />
+      <MapStylePicker mapStyle={mapStyle} setMapStyle={setMapStyle} />
       <ZoomControl position="topright" />
       <ScaleControl />
 

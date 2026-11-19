@@ -68,13 +68,6 @@ html, body, #root {
   background: var(--bg-app);
 }
 
-/* Dark theme: darken ONLY the base map tiles via CSS filter. The tile pane
-   is a separate Leaflet layer from markers/popups/controls/route overlays,
-   so this never touches those. */
-[data-theme="dark"] .leaflet-tile-pane {
-  filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(0.9) saturate(0.6);
-}
-
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
 

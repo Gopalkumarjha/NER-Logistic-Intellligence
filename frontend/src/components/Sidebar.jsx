@@ -27,6 +27,14 @@ export default function Sidebar({
 }) {
   return (
     <div className="sidebar">
+      <div className="sidebar-heading">
+        <div className="sidebar-heading-icon">⌖</div>
+        <div>
+          <div className="sidebar-eyebrow">SMART ROUTE PLANNER</div>
+          <h2>Plan a safer trip</h2>
+          <p>Routes, weather and road risk at a glance.</p>
+        </div>
+      </div>
       <div className="panel">
         <h3>Plan Route</h3>
 
