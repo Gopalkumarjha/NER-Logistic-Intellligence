@@ -13,7 +13,7 @@ import {
   formatDuration
 } from './services/api.js';
 
-import { fetchIncidents } from './services/incidents.js';
+import { fetchIncidents, removeIncident } from './services/incidents.js';
 import { isSameRoute, SAFER_ROUTE_THRESHOLD } from './services/routeRisk.js';
 import { evaluateRouteRisk } from './services/routeRiskEngine.js';
 import { predictMLRisk, buildMLFeatures } from './services/mlRisk.js';
@@ -417,6 +417,7 @@ export default function App() {
 
       const routeUnsafe =
         updatedRisk.incidents.hasHighSeverity ||
+        updatedRisk.incidents.nearbyCount > 0 ||
         updatedRisk.level === 'HIGH';
 
       if (routeUnsafe) {
@@ -680,6 +681,7 @@ export default function App() {
 
         const routeUnsafe =
           currentRouteRisk.incidents.hasHighSeverity ||
+          currentRouteRisk.incidents.nearbyCount > 0 ||
           currentRouteRisk.level === 'HIGH';
 
         if (routeUnsafe) {
@@ -718,6 +720,27 @@ export default function App() {
   // ---------------------------------------------------------
   // UI
   // ---------------------------------------------------------
+
+  const handleIncidentSubmitted = (incident) => {
+    const updated = [incident, ...incidentsRef.current];
+    incidentsRef.current = updated;
+    setIncidents(updated);
+    if (routeContextRef.current) window.setTimeout(() => refreshRouteRisk(), 150);
+  };
+
+  const handleRemoveIncident = async (incident) => {
+    if (!incident?.canDelete || !window.confirm('Remove your incident report? This cannot be undone.')) return;
+    try {
+      await removeIncident(incident._id);
+      const updated = incidentsRef.current.filter((item) => String(item._id) !== String(incident._id));
+      incidentsRef.current = updated;
+      setIncidents(updated);
+      setIncidentsError('');
+      if (routeContextRef.current) window.setTimeout(() => refreshRouteRisk(), 150);
+    } catch (err) {
+      setIncidentsError(err.message || 'Could not remove report.');
+    }
+  };
 
   return (
     <ErrorBoundary>
@@ -825,6 +848,7 @@ export default function App() {
 
                   incidents={incidents}
                   trafficPoints={risk?.traffic?.points || []}
+                  onRemoveIncident={handleRemoveIncident}
 
                   isDisrupted={
                     !!disruption?.isDisrupted
@@ -849,12 +873,7 @@ export default function App() {
               setShowIncidentForm(false)
             }
 
-            onSubmitted={(incident) =>
-              setIncidents((prev) => [
-                incident,
-                ...prev
-              ])
-            }
+            onSubmitted={handleIncidentSubmitted}
           />
         )}
 

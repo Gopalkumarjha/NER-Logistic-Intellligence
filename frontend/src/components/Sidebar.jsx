@@ -209,9 +209,9 @@ export default function Sidebar({
         </div>
       )}
 
-      {disruption && disruption.isDisrupted && (
+      {disruption && (disruption.isDisrupted || disruption.saferFound || disruption.noAlternativeFound) && (
         <div className="panel disruption-panel">
-          <h3>⚠️ Route Disruption Detected</h3>
+          <h3>{disruption.saferFound ? '🧭 Safer route recommendation' : disruption.isDisrupted ? '⚠️ Route Disruption Detected' : '🧭 Route safety check'}</h3>
           <div className="disruption-row current">
             <span>🔴 Current Route</span>
             <b>{risk ? `${risk.level} RISK (${risk.score}/100)` : 'High Risk'}</b>

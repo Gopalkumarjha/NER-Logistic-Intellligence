@@ -1,5 +1,5 @@
 // Incident types that affect route risk / disruption (per Phase 5 spec)
-const ROUTE_AFFECTING_TYPES = ['Landslide', 'Flood', 'Accident', 'Road Block'];
+const ROUTE_AFFECTING_TYPES = ['Landslide', 'Flood', 'Accident', 'Road Block', 'Damaged Road', 'Fallen Tree', 'Traffic'];
 
 // Distance (km) within which an incident is considered "on/near the route"
 const PROXIMITY_RADIUS_KM = 5;

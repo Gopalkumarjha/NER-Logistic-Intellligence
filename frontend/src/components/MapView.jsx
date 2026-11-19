@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, CircleMarker, ZoomControl, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, ZoomControl, useMap } from 'react-leaflet';
 import L from 'leaflet';
 
 // Modern flat divIcon markers (no external PNG marker images needed => no broken-icon risk)
@@ -96,16 +96,41 @@ function FitBounds({ coordinates }) {
 // Default center: between Shillong and Guwahati
 const DEFAULT_CENTER = [25.7, 91.8];
 
+function nearestRouteIndex(route, point) {
+  let nearest = 0;
+  let distance = Infinity;
+  route.forEach(([lat, lon], index) => {
+    const d = (lat - point.lat) ** 2 + (lon - point.lon) ** 2;
+    if (d < distance) { distance = d; nearest = index; }
+  });
+  return nearest;
+}
+
+function trafficLineSegments(route, points) {
+  if (!route?.length || !points?.length) return [];
+  return points.slice(0, -1).flatMap((start, i) => {
+    const end = points[i + 1];
+    if (![start, end].every((point) => point.traffic && Number.isFinite(point.traffic.currentSpeed) && Number.isFinite(point.traffic.freeFlowSpeed) && point.traffic.freeFlowSpeed > 0)) return [];
+    const startIndex = nearestRouteIndex(route, start);
+    const endIndex = nearestRouteIndex(route, end);
+    if (endIndex <= startIndex) return [];
+    const ratio = ((start.traffic.currentSpeed / start.traffic.freeFlowSpeed) + (end.traffic.currentSpeed / end.traffic.freeFlowSpeed)) / 2;
+    const color = ratio >= 0.8 ? '#16a34a' : ratio >= 0.5 ? '#eab308' : '#dc2626';
+    return [{ positions: route.slice(startIndex, endIndex + 1), color, ratio }];
+  });
+}
+
 export default function MapView({
   userPosition, routeCoords, fromMarker, toMarker, incidents,
-  isDisrupted, altRouteCoords, facilities, safeRouteCoords, trafficPoints = []
+  isDisrupted, altRouteCoords, facilities, safeRouteCoords, trafficPoints = [], onRemoveIncident
 }) {
   const [mapStyle, setMapStyle] = React.useState('road');
+  const coloredSegments = trafficLineSegments(routeCoords, trafficPoints);
   return (
     <MapContainer center={DEFAULT_CENTER} zoom={8} scrollWheelZoom={true} zoomControl={false}>
       <BaseTileLayer mapStyle={mapStyle} />
       <MapStylePicker mapStyle={mapStyle} setMapStyle={setMapStyle} />
-      {trafficPoints.some((point) => point.traffic) && <div className="traffic-legend" aria-label="Traffic marker legend"><b>TomTom traffic</b><span>🟢 Clear</span><span>🟡 Slower</span><span>🔴 Congested</span></div>}
+      {coloredSegments.length > 0 && <div className="traffic-legend" aria-label="TomTom traffic line legend"><b>TomTom traffic</b><span>🟢 Moving freely</span><span>🟡 Slower</span><span>🔴 Congested</span></div>}
       <ZoomControl position="topright" />
       <ScaleControl />
 
@@ -135,8 +160,8 @@ export default function MapView({
           <Polyline
             positions={routeCoords}
             pathOptions={{
-              color: isDisrupted ? '#ef4444' : '#3b82f6',
-              weight: 6,
+              color: coloredSegments.length ? '#475569' : (isDisrupted ? '#ef4444' : '#3b82f6'),
+              weight: coloredSegments.length ? 4 : 6,
               opacity: 0.9,
               lineCap: 'round',
               lineJoin: 'round',
@@ -146,16 +171,7 @@ export default function MapView({
         </>
       )}
 
-      {trafficPoints.filter((point) => point.traffic).map((point, index) => {
-        const ratio = point.traffic.currentSpeed / Math.max(point.traffic.freeFlowSpeed || 1, 1);
-        const color = ratio >= 0.8 ? '#16a34a' : ratio >= 0.5 ? '#eab308' : '#dc2626';
-        return (
-          <CircleMarker key={`traffic-${index}`} center={[point.lat, point.lon]} radius={8}
-            pathOptions={{ color: '#fff', weight: 2, fillColor: color, fillOpacity: 0.95 }}>
-            <Popup>TomTom traffic sample<br />{Math.round(point.traffic.currentSpeed)} km/h current<br />{Math.round(point.traffic.freeFlowSpeed)} km/h free flow</Popup>
-          </CircleMarker>
-        );
-      })}
+      {coloredSegments.map((segment, index) => <Polyline key={`traffic-line-${index}`} positions={segment.positions} pathOptions={{ color: segment.color, weight: 7, opacity: 0.95, lineCap: 'round', lineJoin: 'round' }} />)}
 
       {altRouteCoords && altRouteCoords.length > 0 && (
         <Polyline
@@ -182,6 +198,7 @@ export default function MapView({
             <span style={{ fontSize: '11px', color: '#666' }}>
               {inc.verificationStatus === 'verified' ? 'Verified' : 'Unverified community report'} · {inc.createdAt ? new Date(inc.createdAt).toLocaleString() : 'time unavailable'}
             </span>
+            {inc.canDelete && onRemoveIncident && <><br /><button type="button" onClick={() => onRemoveIncident(inc)}>Remove my report</button></>}
           </Popup>
         </Marker>
       ))}
